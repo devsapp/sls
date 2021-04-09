@@ -6,3 +6,26 @@ export const RETRYOPTIONS = {
   minTimeout: 1 * 1000,
   randomize: true,
 };
+
+export const HELP = [
+  {
+    header: 'Options',
+    optionList: [
+      {
+        name: 'help',
+        description: '使用引导',
+        alias: 'h',
+        type: Boolean,
+      },
+    ],
+  },
+  {
+    header: 'Examples',
+    content: [
+      {
+        // desc: 's exec -- get',
+        example: '$ s exec -- get',
+      },
+    ],
+  },
+];

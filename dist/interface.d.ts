@@ -1,4 +1,12 @@
+export interface IInputs {
+    props: IProperties;
+    credentials: ICredentials;
+    appName: string;
+    args: string;
+    path: any;
+}
 export interface ICredentials {
+    Alias: string;
     AccountID: string;
     AccessKeyID: string;
     AccessKeySecret: string;
@@ -10,4 +18,3 @@ export interface IProperties {
     project: string;
     description?: string;
 }
-export declare function isCredentials(arg: any): arg is ICredentials;

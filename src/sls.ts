@@ -1,7 +1,7 @@
 import { HLogger, ILogger } from '@serverless-devs/core';
 import Log from '@alicloud/log';
-import { CONTEXT, RETRYOPTIONS } from '../constant';
-import { IProperties, ICredentials } from '../interface';
+import { CONTEXT, RETRYOPTIONS } from './constant';
+import { IProperties, ICredentials } from './interface';
 import retry from 'promise-retry';
 
 export default class Sls {

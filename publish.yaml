@@ -10,7 +10,7 @@ Tags: #标签详情
 Category: 基础云服务
 Commands:
   create: 创建日志项目/仓库
-  remove: 删除日志项目
+  delete: 删除日志项目
 Service:
   日志服务:
     Authorities:
@@ -47,7 +47,7 @@ Properties:
     Type:
       - String
   project:
-    Description: 日志仓库
+    Description: 日志仓库，日志特性所有账户全局唯一且不能有下划线
     Required: true
     Type:
       - String

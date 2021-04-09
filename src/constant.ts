@@ -23,8 +23,10 @@ export const HELP = [
     header: 'Examples',
     content: [
       {
-        // desc: 's exec -- get',
-        example: '$ s exec -- get',
+        example: '$ s exec -- create',
+      },
+      {
+        example: '$ s exec -- delete',
       },
     ],
   },

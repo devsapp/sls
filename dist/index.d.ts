@@ -1,8 +1,7 @@
 import { ILogger } from '@serverless-devs/core';
-import { ICredentials } from './interface';
+import { IInputs } from './interface';
 export default class SlsCompoent {
     logger: ILogger;
-    getCredentials(credentials: {} | ICredentials, provider: string, accessAlias?: string): Promise<ICredentials>;
-    create(inputs: any): Promise<void>;
-    delete(inputs: any): Promise<void>;
+    create(inputs: IInputs): Promise<void>;
+    delete(inputs: IInputs): Promise<void>;
 }

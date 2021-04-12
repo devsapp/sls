@@ -1,4 +1,17 @@
+export interface IInputs {
+  props: IProperties;
+  project: {
+    component: string;
+    access: string;
+    projectName: string;
+  };
+  appName: string;
+  args: string;
+  path: any;
+}
+
 export interface ICredentials {
+  Alias: string;
   AccountID: string;
   AccessKeyID: string;
   AccessKeySecret: string;
@@ -10,8 +23,4 @@ export interface IProperties {
   logstore: string;
   project: string;
   description?: string;
-}
-
-export function isCredentials(arg: any): arg is ICredentials {
-  return arg.AccessKeyID !== undefined;
 }

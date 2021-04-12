@@ -19,7 +19,7 @@ export default class SlsCompoent {
       return;
     }
 
-    const credentials = await getCredential(inputs.credentials?.Alias);
+    const credentials = await getCredential(inputs.project.access);
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
@@ -41,7 +41,7 @@ export default class SlsCompoent {
       return;
     }
 
-    const credentials = await getCredential(inputs.credentials?.Alias);
+    const credentials = await getCredential(inputs.project.access);
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 

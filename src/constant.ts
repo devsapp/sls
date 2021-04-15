@@ -1,4 +1,5 @@
-export const CONTEXT = 'FC-SLS';
+export const CONTEXT = 'SLS';
+export const CONTEXT_NAME = 'sls';
 
 export const RETRYOPTIONS = {
   retries: 5,

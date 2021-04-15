@@ -1,6 +1,6 @@
-import { HLogger, ILogger, getCredential, commandParse, help } from '@serverless-devs/core';
+import { HLogger, ILogger, getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
 import _ from 'lodash';
-import { CONTEXT, HELP } from './constant';
+import { CONTEXT, HELP, CONTEXT_NAME } from './constant';
 import { IInputs, IProperties } from './interface';
 import Sls from './sls';
 
@@ -20,6 +20,11 @@ export default class SlsCompoent {
     }
 
     const credentials = await getCredential(inputs.project.access);
+    reportComponent(CONTEXT_NAME, {
+      uid: credentials.AccountID,
+      command: 'create',
+    });
+
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
@@ -42,6 +47,11 @@ export default class SlsCompoent {
     }
 
     const credentials = await getCredential(inputs.project.access);
+    reportComponent(CONTEXT_NAME, {
+      uid: credentials.AccountID,
+      command: 'delete',
+    });
+
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 

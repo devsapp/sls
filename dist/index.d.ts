@@ -1,7 +1,7 @@
 import { ILogger } from '@serverless-devs/core';
-import { IInputs } from './interface';
+import { IInputs, IProperties } from './interface';
 export default class SlsCompoent {
     logger: ILogger;
-    create(inputs: IInputs): Promise<void>;
+    create(inputs: IInputs): Promise<IProperties>;
     delete(inputs: IInputs): Promise<void>;
 }

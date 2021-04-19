@@ -32,6 +32,8 @@ export default class SlsCompoent {
     await sls.create(properties);
 
     this.logger.debug('Create sls success.');
+
+    return inputs.props;
   }
 
   async delete(inputs: IInputs) {

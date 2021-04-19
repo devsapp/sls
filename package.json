@@ -4,7 +4,7 @@
   "main": "./dist/index.js",
   "dependencies": {
     "@alicloud/log": "^1.1.0",
-    "@serverless-devs/core": "^0.0.58",
+    "@serverless-devs/core": "^0.0.65",
     "lodash": "^4.17.20",
     "promise-retry": "^2.0.1"
   },

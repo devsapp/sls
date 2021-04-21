@@ -8,6 +8,10 @@ export default class SlsCompoent {
   @HLogger(CONTEXT) logger: ILogger;
 
   async create(inputs: IInputs) {
+    // @ts-ignore
+    delete inputs.Credentials;
+    // @ts-ignore
+    delete inputs.credentials;
     this.logger.debug('Create sls start...');
     this.logger.debug(`inputs params: ${JSON.stringify(inputs)}`);
 

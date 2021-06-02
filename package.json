@@ -1,6 +1,6 @@
 {
   "name": "sls",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./dist/index.js",
   "dependencies": {
     "@alicloud/log": "^1.1.0",
@@ -23,10 +23,10 @@
     "webpack-cli": "^4.4.0"
   },
   "scripts": {
+    "start": "npm run dev",
     "dev": "npx tsc -w -p tsconfig.json",
     "prebuild": "rimraf dist",
-    "build:ts": "npx tsc -p tsconfig.json",
-    "build:component": "npx webpack --mode=production",
+    "build": "npx tsc -p tsconfig.json",
     "publish": "npm run build:component && s platform publish",
     "test": "jest",
     "test:cov": "jest --coverage",

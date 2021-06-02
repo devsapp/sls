@@ -160,6 +160,8 @@ export default class Sls {
       await this.createLogStore(project, logstore);
     }
 
+    await new Promise(r => setTimeout(r, 2000));
+
     await this.makeLogstoreIndex(project, logstore);
   }
 

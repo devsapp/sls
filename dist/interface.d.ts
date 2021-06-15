@@ -21,4 +21,8 @@ export interface IProperties {
     logstore: string;
     project: string;
     description?: string;
+    logstoreOption?: {
+        ttl?: number;
+        shardCount?: number;
+    };
 }

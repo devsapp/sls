@@ -8,8 +8,9 @@ export default class Sls {
     checkProjectExist(project: string): Promise<boolean>;
     checkLogStoreExist(project: string, logstore: string): Promise<boolean>;
     createProject(project: string, description: string): Promise<void>;
-    createLogStore(project: string, logstore: string): Promise<void>;
+    createLogStore(project: string, logstore: string, createLogstoreOptions: any): Promise<void>;
+    updateLogStore(project: string, logstore: string, logstoreOptions: any): Promise<void>;
     makeLogstoreIndex(project: string, logstore: string): Promise<void>;
-    create({ logstore, project, description }: IProperties): Promise<void>;
+    create({ logstore, project, description, logstoreOption }: IProperties): Promise<void>;
     deleteProject(project: string): Promise<void>;
 }

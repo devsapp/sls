@@ -1,5 +1,6 @@
 import { HLogger, ILogger } from '@serverless-devs/core';
 import Log from '@alicloud/log';
+import _ from 'lodash';
 import { CONTEXT, RETRYOPTIONS } from './constant';
 import { IProperties, ICredentials } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
@@ -81,13 +82,8 @@ export default class Sls {
     this.logger.debug(`Create project ${project} success.`);
   }
 
-  async createLogStore(project: string, logstore: string) {
+  async createLogStore(project: string, logstore: string, createLogstoreOptions) {
     this.logger.info(this.stdoutFormatter.create('logstore', logstore));
-
-    const createLogstoreOptions = {
-      ttl: 3600,
-      shardCount: 1,
-    };
 
     await retry(async (retrying, times) => {
       try {
@@ -102,6 +98,24 @@ export default class Sls {
     }, RETRYOPTIONS);
 
     this.logger.debug(`Create logstore ${project}/${logstore} success.`);
+  }
+
+  async updateLogStore(project: string, logstore: string, logstoreOptions) {
+    this.logger.info(this.stdoutFormatter.update('logstore', logstore));
+
+    await retry(async (retrying, times) => {
+      try {
+        await this.logClient.updateLogStore(project, logstore, logstoreOptions);
+      } catch (ex) {
+        this.logger.debug(
+          `Error when updateLogStore, projectName is ${project},, logstoreName is ${logstore}, error is: ${ex}`,
+        );
+        this.logger.info(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
+        retrying(ex);
+      }
+    }, RETRYOPTIONS);
+
+    this.logger.debug(`Update logstore ${project}/${logstore} success.`);
   }
 
   async makeLogstoreIndex(project: string, logstore: string) {
@@ -145,7 +159,7 @@ export default class Sls {
     this.logger.debug(`Create default index success for project ${project} logstore ${logstore}.`);
   }
 
-  async create({ logstore, project, description }: IProperties) {
+  async create({ logstore, project, description, logstoreOption }: IProperties) {
     const projectExist = await this.checkProjectExist(project);
 
     if (projectExist) {
@@ -156,9 +170,16 @@ export default class Sls {
 
     const logStoreExist = await this.checkLogStoreExist(project, logstore);
     if (logStoreExist) {
+      if (!_.isEmpty(logstoreOption)) {
+        await this.updateLogStore(project, logstore, logstoreOption);
+      }
       this.logger.debug('Sls logstore exists, skip the creation process.');
     } else {
-      await this.createLogStore(project, logstore);
+      const createLogstoreOptions = {
+        ttl: logstoreOption?.ttl || 3600,
+        shardCount: logstoreOption?.shardCount || 1,
+      };
+      await this.createLogStore(project, logstore, createLogstoreOptions);
     }
 
     await new Promise((r) => setTimeout(r, 2000));

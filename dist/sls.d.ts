@@ -3,6 +3,7 @@ import { IProperties, ICredentials } from './interface';
 export default class Sls {
     logger: ILogger;
     logClient: any;
+    private stdoutFormatter;
     constructor(regionId: any, profile: ICredentials);
     checkProjectExist(project: string): Promise<boolean>;
     checkLogStoreExist(project: string, logstore: string): Promise<boolean>;

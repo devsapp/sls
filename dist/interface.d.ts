@@ -5,6 +5,7 @@ export interface IInputs {
         access: string;
         projectName: string;
     };
+    credentials: ICredentials;
     appName: string;
     args: string;
     path: any;

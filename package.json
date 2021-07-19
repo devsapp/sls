@@ -1,11 +1,12 @@
 {
   "name": "sls",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "./dist/index.js",
   "dependencies": {
     "@alicloud/log": "^1.1.0",
     "@serverless-devs/core": "^0.0.x",
     "lodash": "^4.17.20",
+    "lodash.get": "^4.4.2",
     "promise-retry": "^2.0.1"
   },
   "devDependencies": {

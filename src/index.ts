@@ -72,6 +72,14 @@ export default class SlsCompoent extends Base {
 
     const sls = new Sls(properties.regionId, credentials);
     await sls.deleteProject(properties.project);
+    super.__report({
+      name: 'sls',
+      content: {
+        region: properties.regionId,
+        project: '',
+        logstore: '',
+      },
+    });
 
     this.logger.debug('Delete sls success.');
   }

@@ -35,6 +35,7 @@ export default class SlsCompoent extends Base {
     await sls.create(properties);
     super.__report({
       name: 'sls',
+      access: inputs.project?.access,
       content: {
         region: properties.regionId,
         project: properties.project,
@@ -74,6 +75,7 @@ export default class SlsCompoent extends Base {
     await sls.deleteProject(properties.project);
     super.__report({
       name: 'sls',
+      access: inputs.project?.access,
       content: {
         region: properties.regionId,
         project: '',

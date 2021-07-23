@@ -159,15 +159,7 @@ export default class Sls {
     this.logger.debug(`Create default index success for project ${project} logstore ${logstore}.`);
   }
 
-  async create({ logstore, project, description, logstoreOption }: IProperties) {
-    const projectExist = await this.checkProjectExist(project);
-
-    if (projectExist) {
-      this.logger.debug('Sls project exists, skip the creation process.');
-    } else {
-      await this.createProject(project, description);
-    }
-
+  async makeLogstore(project, logstore, logstoreOption) {
     const logStoreExist = await this.checkLogStoreExist(project, logstore);
     if (logStoreExist) {
       if (!_.isEmpty(logstoreOption)) {
@@ -185,6 +177,36 @@ export default class Sls {
     await new Promise((r) => setTimeout(r, 2000));
 
     await this.makeLogstoreIndex(project, logstore);
+  }
+
+  async create({ logstore, project, description, logstoreOption }: IProperties) {
+    const projectExist = await this.checkProjectExist(project);
+
+    if (projectExist) {
+      this.logger.debug('Sls project exists, skip the creation process.');
+    } else {
+      await this.createProject(project, description);
+    }
+
+    if (_.isArray(logstore)) {
+      for (const { name, option } of logstore) {
+        if (_.isNil(name)) {
+          this.logger.warn(this.stdoutFormatter('logstore', 'not fount name, skip'));
+          continue;
+        }
+        await this.makeLogstore(project, name, _.isEmpty(option) ? logstoreOption : option);
+      }
+    } else if (_.isString(logstore)) {
+      await this.makeLogstore(project, logstore, logstoreOption);
+    } else {
+      let details: string;
+      if (_.isNil(logstore)) {
+        details = 'Not fount logstore config, skip make logstore';
+      } else {
+        details = 'The logstore is not string or array type, skip make logstore';
+      }
+      this.logger.warn(this.stdoutFormatter('logstore', details));
+    }
   }
 
   async deleteProject(project: string) {

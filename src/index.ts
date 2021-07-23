@@ -4,6 +4,7 @@ import { CONTEXT, HELP, CONTEXT_NAME } from './constant';
 import { IInputs, IProperties } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import Sls from './sls';
+import _ from 'lodash';
 
 export default class SlsCompoent extends Base {
   @HLogger(CONTEXT) logger: ILogger;
@@ -20,7 +21,7 @@ export default class SlsCompoent extends Base {
       return;
     }
 
-    const credentials = inputs.credentials || await getCredential(inputs.project?.access);
+    const credentials = await this.getCredential(inputs.credentials, inputs.project?.access);
     reportComponent(CONTEXT_NAME, {
       uid: credentials.AccountID,
       command: 'create',
@@ -33,13 +34,15 @@ export default class SlsCompoent extends Base {
 
     const sls = new Sls(properties.regionId, credentials);
     await sls.create(properties);
+
+    const logstores: any = _.isArray(properties.logstore) ? properties.logstore.map(({ name }) => name) : properties.logstore;
     super.__report({
       name: 'sls',
       access: inputs.project?.access,
       content: {
         region: properties.regionId,
         project: properties.project,
-        logstore: properties.logstore,
+        logstore: logstores,
       },
     });
 
@@ -60,7 +63,7 @@ export default class SlsCompoent extends Base {
       return;
     }
 
-    const credentials = await getCredential(inputs.project.access);
+    const credentials = await this.getCredential(inputs.credentials, inputs.project?.access);
     reportComponent(CONTEXT_NAME, {
       uid: credentials.AccountID,
       command: 'delete',
@@ -84,5 +87,20 @@ export default class SlsCompoent extends Base {
     });
 
     this.logger.debug('Delete sls success.');
+  }
+
+  async remove(inputs: IInputs) {
+    return await this.delete(inputs);
+  }
+
+  async deploy(inputs: IInputs) {
+    return await this.create(inputs);
+  }
+
+  private async getCredential(credentials, access: string) {
+    if (_.isEmpty(credentials)) {
+      return await getCredential(access);
+    }
+    return credentials;
   }
 }

@@ -24,10 +24,10 @@ export const HELP = [
     header: 'Examples',
     content: [
       {
-        example: '$ s exec -- create',
+        example: '$ s exec -- deploy',
       },
       {
-        example: '$ s exec -- delete',
+        example: '$ s exec -- remove',
       },
     ],
   },

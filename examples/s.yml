@@ -9,7 +9,12 @@ services:
       regionId: cn-shenzhen
       project: uid-cn-shenzhen-logproject # 全局唯一
       description: wss
-      logstore: fc-service-fc-test-logstore
+      logstore:
+        - name: fc-service-fc-test-logstore
+        - name: fc-service-fc-test-logstore-2
+          option:
+            ttl: 333
+            shardCount: 2
       logstoreOption:
         ttl: 456
         shardCount: 1

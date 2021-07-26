@@ -66,6 +66,7 @@ var base_1 = __importDefault(require("./common/base"));
 var constant_1 = require("./constant");
 var stdout_formatter_1 = __importDefault(require("./common/stdout-formatter"));
 var sls_1 = __importDefault(require("./sls"));
+var lodash_1 = __importDefault(require("lodash"));
 var SlsCompoent = /** @class */ (function (_super) {
     __extends(SlsCompoent, _super);
     function SlsCompoent() {
@@ -74,9 +75,9 @@ var SlsCompoent = /** @class */ (function (_super) {
     SlsCompoent.prototype.create = function (inputs) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
-            var apts, commandData, credentials, _d, properties, sls;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var apts, commandData, credentials, properties, sls, logstores;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         this.logger.debug('Create sls start...');
                         this.logger.debug("inputs params: " + JSON.stringify(inputs.props));
@@ -87,34 +88,33 @@ var SlsCompoent = /** @class */ (function (_super) {
                             core_1.help(constant_1.HELP);
                             return [2 /*return*/];
                         }
-                        _d = inputs.credentials;
-                        if (_d) return [3 /*break*/, 2];
-                        return [4 /*yield*/, core_1.getCredential((_b = inputs.project) === null || _b === void 0 ? void 0 : _b.access)];
+                        return [4 /*yield*/, this.getCredential(inputs.credentials, (_b = inputs.project) === null || _b === void 0 ? void 0 : _b.access)];
                     case 1:
-                        _d = (_e.sent());
-                        _e.label = 2;
-                    case 2:
-                        credentials = _d;
+                        credentials = _d.sent();
                         core_1.reportComponent(constant_1.CONTEXT_NAME, {
                             uid: credentials.AccountID,
                             command: 'create',
                         });
                         return [4 /*yield*/, stdout_formatter_1.default.initStdout()];
-                    case 3:
-                        _e.sent();
+                    case 2:
+                        _d.sent();
                         properties = inputs.props;
                         this.logger.debug("Properties values: " + JSON.stringify(properties) + ".");
                         sls = new sls_1.default(properties.regionId, credentials);
                         return [4 /*yield*/, sls.create(properties)];
-                    case 4:
-                        _e.sent();
+                    case 3:
+                        _d.sent();
+                        logstores = lodash_1.default.isArray(properties.logstore) ? properties.logstore.map(function (_a) {
+                            var name = _a.name;
+                            return name;
+                        }) : properties.logstore;
                         _super.prototype.__report.call(this, {
                             name: 'sls',
                             access: (_c = inputs.project) === null || _c === void 0 ? void 0 : _c.access,
                             content: {
                                 region: properties.regionId,
                                 project: properties.project,
-                                logstore: properties.logstore,
+                                logstore: logstores,
                             },
                         });
                         this.logger.debug('Create sls success.');
@@ -124,11 +124,11 @@ var SlsCompoent = /** @class */ (function (_super) {
         });
     };
     SlsCompoent.prototype.delete = function (inputs) {
-        var _a, _b;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
             var apts, commandData, credentials, properties, sls;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         this.logger.debug('Delete sls start...');
                         this.logger.debug("inputs params: " + JSON.stringify(inputs === null || inputs === void 0 ? void 0 : inputs.props));
@@ -139,25 +139,25 @@ var SlsCompoent = /** @class */ (function (_super) {
                             core_1.help(constant_1.HELP);
                             return [2 /*return*/];
                         }
-                        return [4 /*yield*/, core_1.getCredential(inputs.project.access)];
+                        return [4 /*yield*/, this.getCredential(inputs.credentials, (_b = inputs.project) === null || _b === void 0 ? void 0 : _b.access)];
                     case 1:
-                        credentials = _c.sent();
+                        credentials = _d.sent();
                         core_1.reportComponent(constant_1.CONTEXT_NAME, {
                             uid: credentials.AccountID,
                             command: 'delete',
                         });
                         return [4 /*yield*/, stdout_formatter_1.default.initStdout()];
                     case 2:
-                        _c.sent();
+                        _d.sent();
                         properties = inputs.props;
                         this.logger.debug("Properties values: " + JSON.stringify(properties) + ".");
                         sls = new sls_1.default(properties.regionId, credentials);
                         return [4 /*yield*/, sls.deleteProject(properties.project)];
                     case 3:
-                        _c.sent();
+                        _d.sent();
                         _super.prototype.__report.call(this, {
                             name: 'sls',
-                            access: (_b = inputs.project) === null || _b === void 0 ? void 0 : _b.access,
+                            access: (_c = inputs.project) === null || _c === void 0 ? void 0 : _c.access,
                             content: {
                                 region: properties.regionId,
                                 project: '',
@@ -170,6 +170,39 @@ var SlsCompoent = /** @class */ (function (_super) {
             });
         });
     };
+    SlsCompoent.prototype.remove = function (inputs) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.delete(inputs)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    SlsCompoent.prototype.deploy = function (inputs) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.create(inputs)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    SlsCompoent.prototype.getCredential = function (credentials, access) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!lodash_1.default.isEmpty(credentials)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, core_1.getCredential(access)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                    case 2: return [2 /*return*/, credentials];
+                }
+            });
+        });
+    };
     var _a;
     __decorate([
         core_1.HLogger(constant_1.CONTEXT),
@@ -178,4 +211,4 @@ var SlsCompoent = /** @class */ (function (_super) {
     return SlsCompoent;
 }(base_1.default));
 exports.default = SlsCompoent;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsOENBQTZHO0FBQzdHLHVEQUFpQztBQUNqQyx1Q0FBeUQ7QUFFekQsK0VBQXdEO0FBQ3hELDhDQUF3QjtBQUV4QjtJQUF5QywrQkFBSTtJQUE3Qzs7SUFnRkEsQ0FBQztJQTdFTyw0QkFBTSxHQUFaLFVBQWEsTUFBZTs7Ozs7Ozt3QkFDMUIsSUFBSSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMscUJBQXFCLENBQUMsQ0FBQzt3QkFDekMsSUFBSSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsb0JBQWtCLElBQUksQ0FBQyxTQUFTLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBRyxDQUFDLENBQUM7d0JBRTlELElBQUksR0FBRyxFQUFFLE9BQU8sRUFBRSxDQUFDLE1BQU0sQ0FBQyxFQUFFLEtBQUssRUFBRSxFQUFFLElBQUksRUFBRSxHQUFHLEVBQUUsRUFBRSxDQUFDO3dCQUNuRCxXQUFXLEdBQVEsbUJBQVksQ0FBQyxFQUFFLElBQUksRUFBRSxNQUFNLENBQUMsSUFBSSxFQUFFLEVBQUUsSUFBSSxDQUFDLENBQUM7d0JBQ25FLElBQUksQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLHNCQUFvQixJQUFJLENBQUMsU0FBUyxDQUFDLFdBQVcsQ0FBRyxDQUFDLENBQUM7d0JBQ3JFLFVBQUksV0FBVyxhQUFYLFdBQVcsdUJBQVgsV0FBVyxDQUFFLElBQUksMENBQUUsSUFBSSxFQUFFOzRCQUMzQixXQUFJLENBQUMsZUFBSSxDQUFDLENBQUM7NEJBQ1gsc0JBQU87eUJBQ1I7d0JBRW1CLEtBQUEsTUFBTSxDQUFDLFdBQVcsQ0FBQTtnQ0FBbEIsd0JBQWtCO3dCQUFJLHFCQUFNLG9CQUFhLE9BQUMsTUFBTSxDQUFD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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsOENBQTZHO0FBQzdHLHVEQUFpQztBQUNqQyx1Q0FBeUQ7QUFFekQsK0VBQXdEO0FBQ3hELDhDQUF3QjtBQUN4QixrREFBdUI7QUFFdkI7SUFBeUMsK0JBQUk7SUFBN0M7O0lBaUdBLENBQUM7SUE5Rk8sNEJBQU0sR0FBWixVQUFhLE1BQWU7Ozs7Ozs7d0JBQzFCLElBQUksQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLHFCQUFxQixDQUFDLENBQUM7d0JBQ3pDLElBQUksQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLG9CQUFrQixJQUFJLENBQUMsU0FBUyxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUcsQ0FBQyxDQUFDO3dCQUU5RCxJQUFJLEdBQUcsRUFBRSxPQUFPLEVBQUUsQ0FBQyxNQUFNLENBQUMsRUFBRSxLQUFLLEVBQUUsRUFBRSxJQUFJLEVBQUUsR0FBRyxFQUFFLEVBQUUsQ0FBQzt3QkFDbkQsV0FBVyxHQUFRLG1CQUFZLENBQUMsRUFBRSxJQUFJLEVBQUUsTUFBTSxDQUFDLElBQUksRUFBRSxFQUFFLElBQUksQ0FBQyxDQUFDO3dCQUNuRSxJQUFJLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBQyxzQkFBb0IsSUFBSSxDQUFDLFNBQVMsQ0FBQyxXQUFXLENBQUcsQ0FBQyxDQUFDO3dCQUNyRSxVQUFJLFdBQVcsYUFBWCxXQUFXLHVCQUFYLFdBQVcsQ0FBRSxJQUFJLDBDQUFFLElBQUksRUFBRTs0QkFDM0IsV0FBSSxDQUFDLGVBQUksQ0FBQyxDQUFDOzRCQUNYLHNCQUFPO3lCQUNSO3dCQUVtQixxQkFBTSxJQUFJLENBQUMsYUFBYSxDQUFDLE1BQU0sQ0FBQyxXQUFXLFFBQUUsTUFBTSxDQUFDLE9B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

@@ -11,6 +11,7 @@ export default class Sls {
     createLogStore(project: string, logstore: string, createLogstoreOptions: any): Promise<void>;
     updateLogStore(project: string, logstore: string, logstoreOptions: any): Promise<void>;
     makeLogstoreIndex(project: string, logstore: string): Promise<void>;
+    makeLogstore(project: any, logstore: any, logstoreOption: any): Promise<void>;
     create({ logstore, project, description, logstoreOption }: IProperties): Promise<void>;
     deleteProject(project: string): Promise<void>;
 }

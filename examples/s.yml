@@ -9,7 +9,7 @@ services:
       regionId: cn-shenzhen
       project: uid-cn-shenzhen-logproject # 全局唯一
       description: wss
-      logstore:
+      logstore: #fc-service-fc-test-logstore
         - name: fc-service-fc-test-logstore
         - name: fc-service-fc-test-logstore-2
           option:

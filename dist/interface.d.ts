@@ -19,10 +19,17 @@ export interface ICredentials {
 }
 export interface IProperties {
     regionId: string;
-    logstore: string;
     project: string;
+    logstore: string | ILogstore;
     description?: string;
     logstoreOption?: {
+        ttl?: number;
+        shardCount?: number;
+    };
+}
+export interface ILogstore {
+    name: string;
+    option?: {
         ttl?: number;
         shardCount?: number;
     };

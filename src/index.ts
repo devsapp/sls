@@ -1,9 +1,10 @@
 import { HLogger, ILogger, getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
 import Base from './common/base';
-import { CONTEXT, HELP, CONTEXT_NAME } from './constant';
+import { CONTEXT, HELP, CONTEXT_NAME, LOGS_HELP } from './constant';
 import { IInputs, IProperties } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import Sls from './sls';
+import Logs from './logs';
 import _ from 'lodash';
 
 export default class SlsCompoent extends Base {
@@ -87,6 +88,38 @@ export default class SlsCompoent extends Base {
     });
 
     this.logger.debug('Delete sls success.');
+  }
+
+  async logs(inputs: IInputs) {
+    this.logger.debug(`inputs params: ${JSON.stringify(inputs.props)}, args: ${inputs.args}`);
+    const apts = {
+      boolean: ['tail', 'help'],
+      string: ['request-id', 'keyword', 'topic', 'query', 'region', 'project', 'logstore'],
+      alias: { tail: 't', 'start-time': 's', 'end-time': 'e', keyword: 'k', 'request-id': 'r', help: 'h' },
+    };
+    const comParse = await commandParse({ args: inputs.args }, apts);
+    this.logger.debug(`commandParse response is: ${JSON.stringify(comParse)}`);
+
+    if (comParse.data?.help) {
+      reportComponent('sls', { uid: inputs.credentials?.AccountID, command: 'logs' });
+      return help(LOGS_HELP);
+    }
+
+    const credentials = await this.getCredential(inputs.credentials, inputs.project?.access);
+    reportComponent('sls', { uid: credentials.AccountID, command: 'logs' });
+
+    const props = await Logs.getInputs(inputs.props || {}, comParse.data || {});
+    this.logger.debug(`handler props is: ${JSON.stringify(props)}`);
+
+    const logsClient = new Logs(props.regionId, credentials);
+    if (props.tail) {
+      await logsClient.realtime(props.projectName, props.logStoreName, props.topic, props.query);
+    } else {
+      const historyLogs = await logsClient.history(props);
+      logsClient.printLogs(historyLogs);
+    }
+
+    // return ;
   }
 
   async remove(inputs: IInputs) {

@@ -1,6 +1,6 @@
 {
   "name": "sls",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "main": "./dist/index.js",
   "dependencies": {
     "@alicloud/log": "^1.1.0",

@@ -46,7 +46,7 @@ export default class Logs {
           type: 'list',
           name: 'logstore',
           message: 'Multiple logstore names have been detected in your configuration, please select a logstore',
-          choices: logstore.map(item => item.name),
+          choices: logstore.map((item) => item.name),
         }]);
         logstore = answers.logstore;
       }
@@ -110,7 +110,7 @@ export default class Logs {
      */
     const consumedTimeStamps = [];
     while (times > 0) {
-      await sleep(1000);
+      await sleep(1500);
       times -= 1;
 
       timeStart = moment().subtract(10, 'seconds').unix();

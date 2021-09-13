@@ -3,7 +3,7 @@ import { HLogger, ILogger } from '@serverless-devs/core';
 import { SLS } from 'aliyun-sdk';
 import moment from 'moment';
 import _ from 'lodash';
-import { CONTEXT } from './constant';
+import { CONTEXT, TIME_ERROR_TIP } from './constant';
 import { ICredentials } from './interface';
 import inquirer from 'inquirer';
 
@@ -185,6 +185,9 @@ export default class Logs {
       // 20 minutes ago
       this.logger.warn('By default, find logs within 20 minutes...\n');
     }
+    if (_.isNaN(from) || _.isNaN(to)) {
+      throw new Error(TIME_ERROR_TIP);
+    }
 
     const logsList = await this.getLogs({
       from,
@@ -231,7 +234,7 @@ export default class Logs {
 
       let requestId;
       result = _.concat(result, _.values(body).map((cur) => {
-        const currentMessage = cur.message;
+        const currentMessage = cur.message || '';
         const found = currentMessage.match('(\\w{8}(-\\w{4}){3}-\\w{12}?)');
 
         if (!_.isEmpty(found)) {

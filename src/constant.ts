@@ -1,6 +1,8 @@
 export const CONTEXT = 'SLS';
 export const CONTEXT_NAME = 'sls';
 
+export const TIME_ERROR_TIP = "The obtained time format is wrong. The time parameter can be a timestamp, or the format: 'yyyy-MM-ddTHH:mm:ssZ', such as '1623005699000', '2021-06-07T02:54:59+08:00', '2021-06-06T18:54:59Z'";
+
 export const RETRYOPTIONS = {
   retries: 5,
   factor: 2,
@@ -136,11 +138,11 @@ export const LOGS_HELP = [
     content: [
       {
         desc: 'Query logs in the time interval',
-        example: '$ s exec -- logs -s 2021-06-07T02:54:00+08:00 -e 2021-06-07T02:54:59+08:00',
+        example: '$ s logs -s 2021-06-07T02:54:00+08:00 -e 2021-06-07T02:54:59+08:00',
       },
       {
         desc: 'Continuous log output mode',
-        example: '$ s exec -- logs -t',
+        example: '$ s logs -t',
       },
     ],
   },

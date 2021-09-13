@@ -191,7 +191,7 @@ export default class Sls {
     if (_.isArray(logstore)) {
       for (const { name, option } of logstore) {
         if (_.isNil(name)) {
-          this.logger.warn(this.stdoutFormatter('logstore', 'not fount name, skip'));
+          this.logger.warn(this.stdoutFormatter('logstore', 'not found name, skip'));
           continue;
         }
         await this.makeLogstore(project, name, _.isEmpty(option) ? logstoreOption : option);
@@ -201,7 +201,7 @@ export default class Sls {
     } else {
       let details: string;
       if (_.isNil(logstore)) {
-        details = 'Not fount logstore config, skip make logstore';
+        details = 'Not found logstore config, skip make logstore';
       } else {
         details = 'The logstore is not string or array type, skip make logstore';
       }

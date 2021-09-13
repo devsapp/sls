@@ -118,8 +118,6 @@ export default class SlsCompoent extends Base {
       const historyLogs = await logsClient.history(props);
       logsClient.printLogs(historyLogs);
     }
-
-    // return ;
   }
 
   async remove(inputs: IInputs) {

@@ -5,7 +5,7 @@ export interface IInputs {
         access: string;
         projectName: string;
     };
-    credentials: ICredentials;
+    credentials?: ICredentials;
     appName: string;
     args: string;
     path: any;
@@ -20,7 +20,7 @@ export interface ICredentials {
 export interface IProperties {
     regionId: string;
     project: string;
-    logstore: string | ILogstore;
+    logstore?: string | ILogstore[];
     description?: string;
     logstoreOption?: {
         ttl?: number;

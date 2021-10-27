@@ -1,6 +1,6 @@
 {
   "name": "sls",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "./dist/index.js",
   "autoInstall": false,
   "dependencies": {

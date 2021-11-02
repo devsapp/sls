@@ -47,6 +47,7 @@ export default class Logs {
      * @param {*} requestId
      */
     history(props: any): Promise<any[]>;
+    getSlsQuery(query: string, keyword: string, requestId: string): string;
     /**
      * 获取日志
      */

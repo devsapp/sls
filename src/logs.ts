@@ -195,10 +195,31 @@ export default class Logs {
       projectName,
       logStoreName,
       topic,
-      query,
+      query: this.getSlsQuery(query, keyword, requestId),
     });
 
-    return this.filterByKeywords(logsList, { keyword, requestId, queryErrorLog });
+    return this.filterByKeywords(logsList, { queryErrorLog });
+  }
+
+  getSlsQuery(query: string, keyword: string, requestId: string) {
+    let q = '';
+    let hasValue = false;
+
+    if (!_.isNil(query)) {
+      q += query;
+      hasValue = true;
+    }
+
+    if (!_.isNil(keyword)) {
+      q = hasValue ? `${q} and ${keyword}` : keyword;
+      hasValue = true;
+    }
+
+    if (!_.isNil(requestId)) {
+      q = hasValue ? `${q} and ${requestId}` : requestId;
+    }
+
+    return q;
   }
 
   /**
@@ -264,23 +285,8 @@ export default class Logs {
   /**
    * 过滤日志信息
    */
-  private filterByKeywords(logsList = [], { requestId = '', keyword = '', queryErrorLog }) {
+  private filterByKeywords(logsList = [], { queryErrorLog }) {
     let logsClone = _.cloneDeep(logsList);
-
-    if (requestId) {
-      logsClone = _.filter(logsClone, (value) => value.requestId === requestId);
-    }
-
-    if (keyword) {
-      const requestIds: string[] = [];
-      _.forEach(logsClone, (value) => {
-        const curRequestId = value.requestId;
-        if (value.message.includes(keyword) && curRequestId && !requestIds.includes(curRequestId)) {
-          requestIds.push(curRequestId);
-        }
-      });
-      logsClone = _.filter(logsClone, (value) => requestIds.includes(value.requestId));
-    }
 
     if (queryErrorLog) {
       const requestIds: string[] = [];

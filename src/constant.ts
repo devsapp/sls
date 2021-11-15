@@ -4,7 +4,7 @@ export const CONTEXT_NAME = 'sls';
 export const TIME_ERROR_TIP = "The obtained time format is wrong. The time parameter can be a timestamp, or the format: 'yyyy-MM-ddTHH:mm:ssZ', such as '1623005699000', '2021-06-07T02:54:59+08:00', '2021-06-06T18:54:59Z'";
 
 export const RETRYOPTIONS = {
-  retries: 5,
+  retries: 3,
   factor: 2,
   minTimeout: 1 * 1000,
   randomize: true,
@@ -26,10 +26,10 @@ export const HELP = [
     header: 'Examples',
     content: [
       {
-        example: '$ s exec -- deploy',
+        example: '$ s deploy',
       },
       {
-        example: '$ s exec -- remove',
+        example: '$ s remove',
       },
     ],
   },

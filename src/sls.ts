@@ -9,9 +9,11 @@ import retry from 'promise-retry';
 export default class Sls {
   @HLogger(CONTEXT) logger: ILogger;
   logClient: any;
+  checkPutLog: boolean;
   private stdoutFormatter = StdoutFormatter.stdoutFormatter;
 
-  constructor(regionId, profile: ICredentials) {
+  constructor(regionId, profile: ICredentials, checkPutLog: boolean) {
+    this.checkPutLog = checkPutLog;
     this.logClient = new Log({
       region: regionId,
       accessKeyId: profile.AccessKeyID,
@@ -73,7 +75,7 @@ export default class Sls {
           );
         } else {
           this.logger.debug(`Error when createProject, projectName is ${project}, error is: ${ex}`);
-          this.logger.info(this.stdoutFormatter.retry('project', 'create', project, times));
+          this.logger.log(this.stdoutFormatter.retry('project', 'create', project, times));
           retrying(ex);
         }
       }
@@ -90,14 +92,47 @@ export default class Sls {
         await this.logClient.createLogStore(project, logstore, createLogstoreOptions);
       } catch (ex) {
         this.logger.debug(
-          `Error when createLogStore, projectName is ${project},, logstoreName is ${logstore}, error is: ${ex}`,
+          `Error when createLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        this.logger.info(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        this.logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);
 
     this.logger.debug(`Create logstore ${project}/${logstore} success.`);
+
+    if (this.checkPutLog) {
+      await this.postLogStoreLogs(project, logstore, {
+        logs: [{
+          timestamp: new Date().getTime(),
+          content: {
+            message: 'devs sls component create',
+          },
+        }],
+      });
+    } else {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+
+  async postLogStoreLogs(project: string, logstore: string, data) {
+    const retries = 40;
+
+    await retry(async (retrying, times) => {
+      try {
+        await this.logClient.postLogStoreLogs(project, logstore, data);
+      } catch (ex) {
+        this.logger.debug(
+          `Error when postLogStoreLogs, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
+        );
+
+        if (ex.code !== 'ProjectNotExist') {
+          return;
+        }
+        this.logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        retrying(ex);
+      }
+    }, { retries, minTimeout: 3 * 1000, factor: 1 });
   }
 
   async updateLogStore(project: string, logstore: string, logstoreOptions) {
@@ -108,9 +143,9 @@ export default class Sls {
         await this.logClient.updateLogStore(project, logstore, logstoreOptions);
       } catch (ex) {
         this.logger.debug(
-          `Error when updateLogStore, projectName is ${project},, logstoreName is ${logstore}, error is: ${ex}`,
+          `Error when updateLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        this.logger.info(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
+        this.logger.log(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);
@@ -151,7 +186,7 @@ export default class Sls {
           `Error when createIndex, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
 
-        this.logger.info(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
+        this.logger.log(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);
@@ -173,8 +208,6 @@ export default class Sls {
       };
       await this.createLogStore(project, logstore, createLogstoreOptions);
     }
-
-    await new Promise((r) => setTimeout(r, 2000));
 
     await this.makeLogstoreIndex(project, logstore);
   }

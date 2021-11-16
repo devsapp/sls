@@ -33,7 +33,7 @@ export default class SlsCompoent extends Base {
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
-    const sls = new Sls(properties.regionId, credentials);
+    const sls = new Sls(properties.regionId, credentials, true); // commandData.data?.['check-put-log']
     await sls.create(properties);
 
     const logstores: any = _.isArray(properties.logstore) ? properties.logstore.map(({ name }) => name) : properties.logstore;
@@ -75,7 +75,7 @@ export default class SlsCompoent extends Base {
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
-    const sls = new Sls(properties.regionId, credentials);
+    const sls = new Sls(properties.regionId, credentials, false);
     await sls.deleteProject(properties.project);
     super.__report({
       name: 'sls',

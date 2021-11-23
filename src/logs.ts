@@ -61,7 +61,7 @@ export default class Logs {
       tail: comParseData?.tail,
       startTime: comParseData?.['start-time'],
       endTime: comParseData?.['end-time'],
-      keyword: comParseData?.keyword,
+      keyword: comParseData?.search || comParseData?.keyword,
       type: comParseData?.type,
       requestId: comParseData?.['request-id'],
     };
@@ -99,7 +99,7 @@ export default class Logs {
    * @param {*} topic
    * @param {*} query
    */
-  async realtime(projectName: string, logStoreName: string, topic: string, query: string) {
+  async realtime(projectName: string, logStoreName: string, topic: string, query: string, keyword: string) {
     let timeStart;
     let timeEnd;
     let times = 1800;
@@ -121,7 +121,7 @@ export default class Logs {
         projectName,
         logStoreName,
         topic,
-        query,
+        query: this.getSlsQuery(query, keyword),
         from: timeStart,
         to: timeEnd,
       });
@@ -156,8 +156,8 @@ export default class Logs {
    * @param {*} topic
    * @param {*} query
    * @param {*} keyword 关键字过滤
-   * @param {*} queryErrorLog
-   * @param {*} requestId
+   * @param {*} type
+   * @param {*} requestId 废弃
    */
   async history(props) {
     const {
@@ -169,7 +169,6 @@ export default class Logs {
       type,
       requestId,
     } = props;
-    const queryErrorLog = type === 'failed';
 
     let from = moment().subtract(20, 'minutes').unix();
     let to = moment().unix();
@@ -198,10 +197,10 @@ export default class Logs {
       query: this.getSlsQuery(query, keyword, requestId),
     });
 
-    return this.filterByKeywords(logsList, { queryErrorLog });
+    return this.filterByKeywords(logsList, { type });
   }
 
-  getSlsQuery(query: string, keyword: string, requestId: string) {
+  getSlsQuery(query: string, keyword: string, requestId?: string) {
     let q = '';
     let hasValue = false;
 
@@ -285,21 +284,27 @@ export default class Logs {
   /**
    * 过滤日志信息
    */
-  private filterByKeywords(logsList = [], { queryErrorLog }) {
-    let logsClone = _.cloneDeep(logsList);
+  private filterByKeywords(logsList = [], { type }) {
+    const logsClone = _.cloneDeep(logsList);
 
-    if (queryErrorLog) {
-      const requestIds: string[] = [];
+    const queryErrorLog = type === 'failed' || type === 'fail';
+    if (queryErrorLog || type === 'success') {
+      const errorRequestIds: string[] = [];
       _.forEach(logsClone, (value) => {
         const curRequestId = value.requestId;
+        if (!curRequestId || errorRequestIds.includes(curRequestId)) {
+          return;
+        }
         const curMessage = value.message;
-        const isError = curMessage.includes(' [ERROR] ') || curMessage.includes('Error: ');
-
-        if (isError && curRequestId && !requestIds.includes(curRequestId)) {
-          requestIds.push(curRequestId);
+        const isError = curMessage?.includes(' [ERROR] ') || curMessage?.includes('Error: ');
+        if (isError) {
+          errorRequestIds.push(curRequestId);
         }
       });
-      logsClone = _.filter(logsClone, (value) => requestIds.includes(value.requestId));
+      if (queryErrorLog) {
+        return _.filter(logsClone, (value) => errorRequestIds.includes(value.requestId));
+      }
+      return _.filter(logsClone, (value) => !errorRequestIds.includes(value.requestId));
     }
 
     return logsClone;

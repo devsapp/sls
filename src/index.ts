@@ -94,7 +94,7 @@ export default class SlsCompoent extends Base {
     this.logger.debug(`inputs params: ${JSON.stringify(inputs.props)}, args: ${inputs.args}`);
     const apts = {
       boolean: ['tail', 'help'],
-      string: ['request-id', 'keyword', 'topic', 'query', 'region', 'project', 'logstore'],
+      string: ['request-id', 'keyword', 'search', 'topic', 'query', 'region', 'project', 'logstore'],
       alias: { tail: 't', 'start-time': 's', 'end-time': 'e', keyword: 'k', 'request-id': 'r', help: 'h' },
     };
     const comParse = await commandParse({ args: inputs.args }, apts);
@@ -113,7 +113,7 @@ export default class SlsCompoent extends Base {
 
     const logsClient = new Logs(props.regionId, credentials);
     if (props.tail) {
-      await logsClient.realtime(props.projectName, props.logStoreName, props.topic, props.query);
+      await logsClient.realtime(props.projectName, props.logStoreName, props.topic, props.query, props.keyword);
     } else {
       const historyLogs = await logsClient.history(props);
       logsClient.printLogs(historyLogs);

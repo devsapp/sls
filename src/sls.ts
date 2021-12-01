@@ -1,13 +1,12 @@
-import { HLogger, ILogger } from '@serverless-devs/core';
 import Log from '@alicloud/log';
 import _ from 'lodash';
-import { CONTEXT, RETRYOPTIONS } from './constant';
+import { RETRYOPTIONS } from './constant';
 import { IProperties, ICredentials } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import retry from 'promise-retry';
+import logger from './common/logger';
 
 export default class Sls {
-  @HLogger(CONTEXT) logger: ILogger;
   logClient: any;
   checkPutLog: boolean;
   private stdoutFormatter = StdoutFormatter.stdoutFormatter;
@@ -23,7 +22,7 @@ export default class Sls {
   }
 
   async checkProjectExist(project: string): Promise<boolean> {
-    this.logger.info(this.stdoutFormatter.check('project', project));
+    logger.debug(this.stdoutFormatter.check('project', project));
     let projectExist = true;
 
     try {
@@ -35,12 +34,12 @@ export default class Sls {
       projectExist = false;
     }
 
-    this.logger.debug(`Project name(${project})${projectExist ? '' : ' does not'} exist.`);
+    logger.debug(`Project name(${project})${projectExist ? '' : ' does not'} exist.`);
     return projectExist;
   }
 
   async checkLogStoreExist(project: string, logstore: string): Promise<boolean> {
-    this.logger.info(this.stdoutFormatter.check('logstore', `${project}/${logstore}`));
+    logger.debug(this.stdoutFormatter.check('logstore', `${project}/${logstore}`));
 
     let logStoreExist = true;
     try {
@@ -52,15 +51,13 @@ export default class Sls {
       logStoreExist = false;
     }
 
-    this.logger.debug(
+    logger.debug(
       `Logstore name(${project}/${logstore})${logStoreExist ? '' : ' does not'} exist.`,
     );
     return logStoreExist;
   }
 
   async createProject(project: string, description: string) {
-    this.logger.info(this.stdoutFormatter.create('project', project));
-
     await retry(async (retrying, times) => {
       try {
         await this.logClient.createProject(project, { description });
@@ -74,32 +71,34 @@ export default class Sls {
             `Sls project ${project} already exist, it may be in other region or created by other users.`,
           );
         } else {
-          this.logger.debug(`Error when createProject, projectName is ${project}, error is: ${ex}`);
-          this.logger.log(this.stdoutFormatter.retry('project', 'create', project, times));
+          logger.debug(`Error when createProject, projectName is ${project}, error is: ${ex}`);
+          logger.spinner?.stop();
+          logger.log(this.stdoutFormatter.retry('project', 'create', project, times));
+          logger.spinner?.start();
           retrying(ex);
         }
       }
     }, RETRYOPTIONS);
 
-    this.logger.debug(`Create project ${project} success.`);
+    logger.debug(`Create project ${project} success.`);
   }
 
   async createLogStore(project: string, logstore: string, createLogstoreOptions) {
-    this.logger.info(this.stdoutFormatter.create('logstore', logstore));
-
     await retry(async (retrying, times) => {
       try {
         await this.logClient.createLogStore(project, logstore, createLogstoreOptions);
       } catch (ex) {
-        this.logger.debug(
+        logger.debug(
           `Error when createLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        this.logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        logger.spinner?.stop();
+        logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        logger.spinner?.start();
         retrying(ex);
       }
     }, RETRYOPTIONS);
 
-    this.logger.debug(`Create logstore ${project}/${logstore} success.`);
+    logger.debug(`Create logstore ${project}/${logstore} success.`);
 
     if (this.checkPutLog) {
       await this.postLogStoreLogs(project, logstore, {
@@ -122,53 +121,57 @@ export default class Sls {
       try {
         await this.logClient.postLogStoreLogs(project, logstore, data);
       } catch (ex) {
-        this.logger.debug(
+        logger.debug(
           `Error when postLogStoreLogs, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
 
         if (ex.code !== 'ProjectNotExist') {
           return;
         }
-        this.logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        logger.spinner?.stop();
+        logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
+        logger.spinner?.start();
         retrying(ex);
       }
     }, { retries, minTimeout: 3 * 1000, factor: 1 });
   }
 
   async updateLogStore(project: string, logstore: string, logstoreOptions) {
-    this.logger.info(this.stdoutFormatter.update('logstore', logstore));
+    logger.debug(this.stdoutFormatter.update('logstore', logstore));
 
     await retry(async (retrying, times) => {
       try {
         await this.logClient.updateLogStore(project, logstore, logstoreOptions);
       } catch (ex) {
-        this.logger.debug(
+        logger.debug(
           `Error when updateLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        this.logger.log(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
+        logger.spinner?.stop();
+        logger.log(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
+        logger.spinner?.start();
         retrying(ex);
       }
     }, RETRYOPTIONS);
 
-    this.logger.debug(`Update logstore ${project}/${logstore} success.`);
+    logger.debug(`Update logstore ${project}/${logstore} success.`);
   }
 
   async makeLogstoreIndex(project: string, logstore: string) {
-    this.logger.info(this.stdoutFormatter.check('logstore index', `${project}/${logstore}`));
+    logger.debug(this.stdoutFormatter.check('logstore index', `${project}/${logstore}`));
     try {
       await this.logClient.getIndexConfig(project, logstore);
-      this.logger.debug('The log storage index exists and the creation process is skipped.');
+      logger.debug('The log storage index exists and the creation process is skipped.');
       return;
     } catch (ex) {
       if (ex.code !== 'IndexConfigNotExist') {
-        this.logger.debug(
+        logger.debug(
           `Error when getIndexConfig, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
         throw ex;
       }
     }
 
-    this.logger.info(this.stdoutFormatter.create('logstore index', `${project}/${logstore}`));
+    logger.debug(this.stdoutFormatter.create('logstore index', `${project}/${logstore}`));
 
     await retry(async (retrying, times) => {
       try {
@@ -182,16 +185,17 @@ export default class Sls {
           },
         });
       } catch (ex) {
-        this.logger.debug(
+        logger.debug(
           `Error when createIndex, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-
-        this.logger.log(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
+        logger.spinner?.stop();
+        logger.log(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
+        logger.spinner?.start();
         retrying(ex);
       }
     }, RETRYOPTIONS);
 
-    this.logger.debug(`Create default index success for project ${project} logstore ${logstore}.`);
+    logger.debug(`Create default index success for project ${project} logstore ${logstore}.`);
   }
 
   async makeLogstore(project, logstore, logstoreOption) {
@@ -200,7 +204,7 @@ export default class Sls {
       if (!_.isEmpty(logstoreOption)) {
         await this.updateLogStore(project, logstore, logstoreOption);
       }
-      this.logger.debug('Sls logstore exists, skip the creation process.');
+      logger.debug('Sls logstore exists, skip the creation process.');
     } else {
       const createLogstoreOptions = {
         ttl: logstoreOption?.ttl || 3600,
@@ -213,44 +217,56 @@ export default class Sls {
   }
 
   async create({ logstore, project, description, logstoreOption }: IProperties) {
-    const projectExist = await this.checkProjectExist(project);
-
-    if (projectExist) {
-      this.logger.debug('Sls project exists, skip the creation process.');
-    } else {
-      await this.createProject(project, description);
-    }
-
-    if (_.isArray(logstore)) {
-      for (const { name, option } of logstore) {
-        if (_.isNil(name)) {
-          this.logger.warn(this.stdoutFormatter('logstore', 'not found name, skip'));
-          continue;
-        }
-        await this.makeLogstore(project, name, _.isEmpty(option) ? logstoreOption : option);
-      }
-    } else if (_.isString(logstore)) {
-      await this.makeLogstore(project, logstore, logstoreOption);
-    } else {
-      let details: string;
-      if (_.isNil(logstore)) {
-        details = 'Not found logstore config, skip make logstore';
-      } else {
-        details = 'The logstore is not string or array type, skip make logstore';
-      }
-      this.logger.warn(this.stdoutFormatter('logstore', details));
-    }
+    await logger.task('Creating', [
+      {
+        title: this.stdoutFormatter.create('project', project),
+        id: 'project',
+        task: async () => {
+          const projectExist = await this.checkProjectExist(project);
+          if (projectExist) {
+            logger.debug('Sls project exists, skip the creation process.');
+          } else {
+            await this.createProject(project, description);
+          }
+        },
+      },
+      {
+        title: this.stdoutFormatter.create('logstore', logstore),
+        id: 'logstore',
+        task: async () => {
+          if (_.isArray(logstore)) {
+            for (const { name, option } of logstore) {
+              if (_.isNil(name)) {
+                logger.debug(this.stdoutFormatter('logstore', 'not found name, skip'));
+                continue;
+              }
+              await this.makeLogstore(project, name, _.isEmpty(option) ? logstoreOption : option);
+            }
+          } else if (_.isString(logstore)) {
+            await this.makeLogstore(project, logstore, logstoreOption);
+          } else {
+            let details: string;
+            if (_.isNil(logstore)) {
+              details = 'Not found logstore config, skip make logstore';
+            } else {
+              details = 'The logstore is not string or array type, skip make logstore';
+            }
+            logger.debug(this.stdoutFormatter('logstore', details));
+          }
+        },
+      },
+    ]);
   }
 
   async deleteProject(project: string) {
     const projectExist = await this.checkProjectExist(project);
 
     if (projectExist) {
-      this.logger.info(this.stdoutFormatter.remove('project', project));
+      logger.info(this.stdoutFormatter.remove('project', project));
       await this.logClient.deleteProject(project);
-      this.logger.debug(`Delete ${project} success.`);
+      logger.debug(`Delete ${project} success.`);
     } else {
-      this.logger.info(`Sls ${project} not exists, skip the delete`);
+      logger.info(`Sls ${project} not exists, skip the delete`);
     }
   }
 }

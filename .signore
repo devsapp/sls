@@ -1,4 +1,5 @@
 node_modules
+src
 .s
 LICENSE
 package-lock.json
@@ -17,8 +18,13 @@ package-lock.json
 .env
 
 README.md
+readme.md
 ./examples
 ./test
 ./Makefile
 ./f2elint.config.js
-./commitlint.config.js 
+./commitlint.config.js
+jest.config.ts
+jest.setup.ts
+tsconfig.json
+tsconfig.base.json

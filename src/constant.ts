@@ -52,7 +52,6 @@ export const LOGS_HELP = [
       {
         name: 'tail',
         description: 'Continuous log output mode',
-        alias: 't',
         defaultOption: false,
         type: Boolean,
       },
@@ -71,22 +70,20 @@ export const LOGS_HELP = [
         type: Number,
       },
       {
-        name: 'keyword',
+        name: 'search',
         description: 'Keyword query',
-        alias: 'k',
         defaultOption: false,
         type: String,
       },
       {
         name: 'request-id',
         description: 'Query according to requestId within the time interval',
-        alias: 'r',
         defaultOption: false,
         type: String,
       },
       {
         name: 'type',
-        description: 'Log type query, value: failed',
+        description: 'Log type query, value: success/fail',
         defaultOption: false,
         type: String,
       },
@@ -142,7 +139,7 @@ export const LOGS_HELP = [
       },
       {
         desc: 'Continuous log output mode',
-        example: '$ s logs -t',
+        example: '$ s logs --tail',
       },
     ],
   },

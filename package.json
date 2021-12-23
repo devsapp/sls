@@ -5,7 +5,7 @@
   "autoInstall": false,
   "dependencies": {
     "@alicloud/log": "^1.1.0",
-    "@serverless-devs/core": "^0.1.15-beta.3",
+    "@serverless-devs/core": "latest",
     "aliyun-sdk": "^1.12.3",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",

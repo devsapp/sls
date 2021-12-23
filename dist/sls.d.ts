@@ -1,7 +1,5 @@
-import { ILogger } from '@serverless-devs/core';
 import { IProperties, ICredentials } from './interface';
 export default class Sls {
-    logger: ILogger;
     logClient: any;
     checkPutLog: boolean;
     private stdoutFormatter;

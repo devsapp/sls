@@ -33,7 +33,7 @@ export default class Logs {
      * @param {*} topic
      * @param {*} query
      */
-    realtime(projectName: string, logStoreName: string, topic: string, query: string): Promise<void>;
+    realtime(projectName: string, logStoreName: string, topic: string, query: string, keyword: string): Promise<void>;
     /**
      * 获取历史日志
      * @param {props} projectName
@@ -43,11 +43,11 @@ export default class Logs {
      * @param {*} topic
      * @param {*} query
      * @param {*} keyword 关键字过滤
-     * @param {*} queryErrorLog
-     * @param {*} requestId
+     * @param {*} type
+     * @param {*} requestId 废弃
      */
     history(props: any): Promise<any[]>;
-    getSlsQuery(query: string, keyword: string, requestId: string): string;
+    getSlsQuery(query: string, keyword: string, requestId?: string): string;
     /**
      * 获取日志
      */

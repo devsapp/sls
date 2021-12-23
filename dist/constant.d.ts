@@ -38,21 +38,15 @@ export declare const LOGS_HELP: ({
     optionList: ({
         name: string;
         description: string;
-        alias: string;
         defaultOption: boolean;
         type: BooleanConstructor;
+        alias?: undefined;
     } | {
         name: string;
         description: string;
         alias: string;
         defaultOption: boolean;
         type: NumberConstructor;
-    } | {
-        name: string;
-        description: string;
-        alias: string;
-        defaultOption: boolean;
-        type: StringConstructor;
     } | {
         name: string;
         description: string;

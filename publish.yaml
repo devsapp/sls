@@ -2,7 +2,7 @@ Type: Component
 Name: sls
 Provider:
   - 阿里云
-Version: dev
+Version: 0.0.20
 Description: 阿里云SLS产品工具
 HomePage: https://github.com/devsapp/sls
 Tags: #标签详情

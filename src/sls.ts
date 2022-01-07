@@ -72,9 +72,7 @@ export default class Sls {
           );
         } else {
           logger.debug(`Error when createProject, projectName is ${project}, error is: ${ex}`);
-          logger.spinner?.stop();
-          logger.log(this.stdoutFormatter.retry('project', 'create', project, times));
-          logger.spinner?.start();
+          logger.debug(this.stdoutFormatter.retry('project', 'create', project, times));
           retrying(ex);
         }
       }
@@ -91,9 +89,7 @@ export default class Sls {
         logger.debug(
           `Error when createLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        logger.spinner?.stop();
-        logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
-        logger.spinner?.start();
+        logger.debug(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);
@@ -128,9 +124,7 @@ export default class Sls {
         if (ex.code !== 'ProjectNotExist') {
           return;
         }
-        logger.spinner?.stop();
-        logger.log(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
-        logger.spinner?.start();
+        logger.debug(this.stdoutFormatter.retry('logstore', 'create', logstore, times));
         retrying(ex);
       }
     }, { retries, minTimeout: 3 * 1000, factor: 1 });
@@ -146,9 +140,7 @@ export default class Sls {
         logger.debug(
           `Error when updateLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        logger.spinner?.stop();
-        logger.log(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
-        logger.spinner?.start();
+        logger.debug(this.stdoutFormatter.retry('logstore', 'update', logstore, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);
@@ -188,9 +180,7 @@ export default class Sls {
         logger.debug(
           `Error when createIndex, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
         );
-        logger.spinner?.stop();
-        logger.log(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
-        logger.spinner?.start();
+        logger.debug(this.stdoutFormatter.retry('logstore index', 'create', `${project}/${logstore}`, times));
         retrying(ex);
       }
     }, RETRYOPTIONS);

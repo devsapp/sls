@@ -1,14 +1,15 @@
-import { HLogger, ILogger, getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
+import { getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
 import Base from './common/base';
-import { CONTEXT, HELP, CONTEXT_NAME, LOGS_HELP } from './constant';
+import { HELP, CONTEXT_NAME, LOGS_HELP } from './constant';
 import { IInputs, IProperties } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import Sls from './sls';
 import Logs from './logs';
 import _ from 'lodash';
+import logger from './common/logger';
 
 export default class SlsCompoent extends Base {
-  @HLogger(CONTEXT) logger: ILogger;
+  logger = logger;
 
   async create(inputs: IInputs) {
     this.logger.debug('Create sls start...');

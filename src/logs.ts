@@ -1,10 +1,11 @@
 /* eslint-disable no-await-in-loop */
-import { HLogger, ILogger, inquirer } from '@serverless-devs/core';
+import { inquirer } from '@serverless-devs/core';
 import { SLS } from 'aliyun-sdk';
 import moment from 'moment';
 import _ from 'lodash';
-import { CONTEXT, TIME_ERROR_TIP } from './constant';
+import { TIME_ERROR_TIP } from './constant';
 import { ICredentials } from './interface';
+import logger from './common/logger';
 
 interface IGetLogs {
   projectName: string;
@@ -66,7 +67,7 @@ export default class Logs {
     };
   }
 
-  @HLogger(CONTEXT) logger: ILogger;
+  logger = logger;
   slsClient: any;
 
   constructor(regionId, profile: ICredentials) {

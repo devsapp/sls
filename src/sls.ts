@@ -5,14 +5,23 @@ import { IProperties, ICredentials } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import retry from 'promise-retry';
 import logger from './common/logger';
+import { writeCreatCache } from './common/write-creat-cache';
 
 export default class Sls {
   logClient: any;
   checkPutLog: boolean;
+  regionId: string;
+  accountID: string;
+  serviceName: string;
+  configPath: string;
   private stdoutFormatter = StdoutFormatter.stdoutFormatter;
 
-  constructor(regionId, profile: ICredentials, checkPutLog: boolean) {
+  constructor(regionId, profile: ICredentials, checkPutLog: boolean, setCache?) {
     this.checkPutLog = checkPutLog;
+    this.regionId = regionId;
+    this.accountID = profile.AccountID;
+    this.serviceName = setCache?.serviceName;
+    this.configPath = setCache?.configPath;
     this.logClient = new Log({
       region: regionId,
       accessKeyId: profile.AccessKeyID,
@@ -80,6 +89,13 @@ export default class Sls {
       }
     }, RETRYOPTIONS);
 
+    await writeCreatCache({
+      accountID: this.accountID,
+      region: this.regionId,
+      serviceName: this.serviceName,
+      configPath: this.configPath,
+      project,
+    });
     logger.debug(`Create project ${project} success.`);
   }
 
@@ -97,7 +113,13 @@ export default class Sls {
         retrying(ex);
       }
     }, RETRYOPTIONS);
-
+    await writeCreatCache({
+      accountID: this.accountID,
+      region: this.regionId,
+      serviceName: this.serviceName,
+      configPath: this.configPath,
+      logstore: `${project}/${logstore}`,
+    });
     logger.debug(`Create logstore ${project}/${logstore} success.`);
 
     if (this.checkPutLog) {

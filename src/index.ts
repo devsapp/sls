@@ -34,7 +34,11 @@ export default class SlsCompoent extends Base {
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
-    const sls = new Sls(properties.regionId, credentials, true); // commandData.data?.['check-put-log']
+    const setCache = {
+      serviceName: properties.serviceName,
+      configPath: inputs.path?.configPath,
+    };
+    const sls = new Sls(properties.regionId, credentials, true, setCache); // commandData.data?.['check-put-log']
     await sls.create(properties);
 
     const logstores: any = _.isArray(properties.logstore) ? properties.logstore.map(({ name }) => name) : properties.logstore;
@@ -101,6 +105,7 @@ export default class SlsCompoent extends Base {
     const comParse = await commandParse({ args: inputs.args }, apts);
     this.logger.debug(`commandParse response is: ${JSON.stringify(comParse)}`);
 
+    // @ts-ignore
     if (comParse.data?.help) {
       reportComponent('sls', { uid: inputs.credentials?.AccountID, command: 'logs' });
       return help(LOGS_HELP);

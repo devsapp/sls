@@ -1,14 +1,15 @@
-import { HLogger, ILogger, getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
+import { getCredential, reportComponent, commandParse, help } from '@serverless-devs/core';
 import Base from './common/base';
-import { CONTEXT, HELP, CONTEXT_NAME, LOGS_HELP } from './constant';
+import { HELP, CONTEXT_NAME, LOGS_HELP } from './constant';
 import { IInputs, IProperties } from './interface';
 import StdoutFormatter from './common/stdout-formatter';
 import Sls from './sls';
 import Logs from './logs';
 import _ from 'lodash';
+import logger from './common/logger';
 
 export default class SlsCompoent extends Base {
-  @HLogger(CONTEXT) logger: ILogger;
+  logger = logger;
 
   async create(inputs: IInputs) {
     this.logger.debug('Create sls start...');
@@ -33,7 +34,11 @@ export default class SlsCompoent extends Base {
     const properties: IProperties = inputs.props;
     this.logger.debug(`Properties values: ${JSON.stringify(properties)}.`);
 
-    const sls = new Sls(properties.regionId, credentials, true); // commandData.data?.['check-put-log']
+    const setCache = {
+      serviceName: properties.serviceName,
+      configPath: inputs.path?.configPath,
+    };
+    const sls = new Sls(properties.regionId, credentials, true, setCache); // commandData.data?.['check-put-log']
     await sls.create(properties);
 
     const logstores: any = _.isArray(properties.logstore) ? properties.logstore.map(({ name }) => name) : properties.logstore;
@@ -100,6 +105,7 @@ export default class SlsCompoent extends Base {
     const comParse = await commandParse({ args: inputs.args }, apts);
     this.logger.debug(`commandParse response is: ${JSON.stringify(comParse)}`);
 
+    // @ts-ignore
     if (comParse.data?.help) {
       reportComponent('sls', { uid: inputs.credentials?.AccountID, command: 'logs' });
       return help(LOGS_HELP);

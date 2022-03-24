@@ -1,4 +1,3 @@
-import { ILogger } from '@serverless-devs/core';
 import { ICredentials } from './interface';
 interface IGetLogs {
     projectName: string;
@@ -22,7 +21,7 @@ export default class Logs {
         type: any;
         requestId: any;
     }>;
-    logger: ILogger;
+    logger: import("@serverless-devs/core").Logger;
     slsClient: any;
     constructor(regionId: any, profile: ICredentials);
     printLogs(historyLogs: any[]): void;

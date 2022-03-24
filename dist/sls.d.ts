@@ -2,8 +2,12 @@ import { IProperties, ICredentials } from './interface';
 export default class Sls {
     logClient: any;
     checkPutLog: boolean;
+    regionId: string;
+    accountID: string;
+    serviceName: string;
+    configPath: string;
     private stdoutFormatter;
-    constructor(regionId: any, profile: ICredentials, checkPutLog: boolean);
+    constructor(regionId: any, profile: ICredentials, checkPutLog: boolean, setCache?: any);
     checkProjectExist(project: string): Promise<boolean>;
     checkLogStoreExist(project: string, logstore: string): Promise<boolean>;
     createProject(project: string, description: string): Promise<void>;

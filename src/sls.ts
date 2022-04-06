@@ -7,6 +7,10 @@ import retry from 'promise-retry';
 import logger from './common/logger';
 import { writeCreatCache } from './common/write-creat-cache';
 
+const options = {
+  timeout: 60000,
+};
+
 export default class Sls {
   logClient: any;
   checkPutLog: boolean;
@@ -35,7 +39,7 @@ export default class Sls {
     let projectExist = true;
 
     try {
-      await this.logClient.getProject(project);
+      await this.logClient.getProject(project, options);
     } catch (e) {
       if (e.code !== 'ProjectNotExist') {
         throw e;
@@ -52,7 +56,7 @@ export default class Sls {
 
     let logStoreExist = true;
     try {
-      await this.logClient.getLogStore(project, logstore);
+      await this.logClient.getLogStore(project, logstore, options);
     } catch (e) {
       if (e.code !== 'LogStoreNotExist') {
         throw e;
@@ -69,7 +73,7 @@ export default class Sls {
   async createProject(project: string, description: string) {
     await retry(async (retrying, times) => {
       try {
-        await this.logClient.createProject(project, { description });
+        await this.logClient.createProject(project, { description }, options);
       } catch (ex) {
         const exCode = ex.code;
 
@@ -100,7 +104,7 @@ export default class Sls {
   async createLogStore(project: string, logstore: string, createLogstoreOptions) {
     await retry(async (retrying, times) => {
       try {
-        await this.logClient.createLogStore(project, logstore, createLogstoreOptions);
+        await this.logClient.createLogStore(project, logstore, createLogstoreOptions, options);
       } catch (ex) {
         logger.debug(
           `Error when createLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
@@ -137,7 +141,7 @@ export default class Sls {
 
     await retry(async (retrying, times) => {
       try {
-        await this.logClient.postLogStoreLogs(project, logstore, data);
+        await this.logClient.postLogStoreLogs(project, logstore, data, options);
       } catch (ex) {
         logger.debug(
           `Error when postLogStoreLogs, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
@@ -157,7 +161,7 @@ export default class Sls {
 
     await retry(async (retrying, times) => {
       try {
-        await this.logClient.updateLogStore(project, logstore, logstoreOptions);
+        await this.logClient.updateLogStore(project, logstore, logstoreOptions, options);
       } catch (ex) {
         logger.debug(
           `Error when updateLogStore, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
@@ -173,7 +177,7 @@ export default class Sls {
   async makeLogstoreIndex(project: string, logstore: string) {
     logger.debug(this.stdoutFormatter.check('logstore index', `${project}/${logstore}`));
     try {
-      await this.logClient.getIndexConfig(project, logstore);
+      await this.logClient.getIndexConfig(project, logstore, options);
       logger.debug('The log storage index exists and the creation process is skipped.');
       return;
     } catch (ex) {
@@ -197,7 +201,7 @@ export default class Sls {
             // @ts-ignore
             token: [...', \'";=()[]{}?@&<>/:\n\t\r'],
           },
-        });
+        }, options);
       } catch (ex) {
         logger.debug(
           `Error when createIndex, projectName is ${project}, logstoreName is ${logstore}, error is: ${ex}`,
@@ -275,7 +279,7 @@ export default class Sls {
 
     if (projectExist) {
       logger.info(this.stdoutFormatter.remove('project', project));
-      await this.logClient.deleteProject(project);
+      await this.logClient.deleteProject(project, options);
       logger.debug(`Delete ${project} success.`);
     } else {
       logger.info(`Sls ${project} not exists, skip the delete`);

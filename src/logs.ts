@@ -77,6 +77,9 @@ export default class Logs {
       securityToken: profile.SecurityToken,
       endpoint: `http://${regionId}.log.aliyuncs.com`,
       apiVersion: '2015-06-01',
+      // httpOptions: {
+      //   timeout: 1000  //1sec, 默认没有timeout
+      // },
     });
   }
 

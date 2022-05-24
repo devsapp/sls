@@ -3,7 +3,7 @@ import { inquirer } from '@serverless-devs/core';
 import { SLS } from 'aliyun-sdk';
 import moment from 'moment';
 import _ from 'lodash';
-import { TIME_ERROR_TIP } from './constant';
+import { TIME_ERROR_TIP, DATE_TIME_REG } from './constant';
 import { ICredentials } from './interface';
 import logger from './common/logger';
 
@@ -16,11 +16,12 @@ interface IGetLogs {
   query: string;
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+const replaceAll = (string, search, replace) => string.split(search).join(replace);
+const sleep = (ms: number) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+const COLOR_MAP = ['\x1B[36m', '\x1B[32m', '\x1B[33m', '\x1B[34m'];
+const instanceIds = new Map();
 
 export default class Logs {
   static async getInputs(props, comParseData) {
@@ -86,12 +87,46 @@ export default class Logs {
   printLogs(historyLogs: any[]) {
     let requestId = '';
 
+    this.logger.debug(`print logs: ${JSON.stringify(historyLogs)}`);
     for (const item of historyLogs) {
-      if (requestId !== item.requestId) {
+      const { message: log, requestId: rid, time, extra } = item;
+      if (requestId !== rid) {
         this.logger.log('\n');
-        requestId = item.requestId;
+        requestId = rid;
       }
-      this.logger.log(item.message);
+
+      let l = log;
+
+      const tokens = l.split(' ');
+      if (tokens.length && DATE_TIME_REG.test(tokens[0])) {
+        tokens[0] = `\x1B[1;32m${moment(tokens[0]).format('YYYY-MM-DD HH:mm:ss')}\x1B[0m`;
+      }
+
+      if (tokens[2] === '[silly]') {
+        tokens.splice(2, 1);
+      }
+      l = _.trim(tokens.join(' '), '\n');
+
+      l = replaceAll(l, 'Error', '\x1B[31mError\x1B[0m');
+      l = replaceAll(l, 'ERROR', '\x1B[31mERROR\x1B[0m');
+      l = replaceAll(l, 'error', '\x1B[31merror\x1B[0m');
+
+      if (time) {
+        l = `\x1B[2m${time}\x1B[0m ${l}`;
+      }
+      if (extra?.instanceID) {
+        const instanceId = extra.instanceID;
+        let colorIndex;
+        if (instanceIds.has(instanceId)) {
+          colorIndex = instanceIds.get(instanceId);
+        } else {
+          colorIndex = instanceIds.size % COLOR_MAP.length;
+          instanceIds.set(instanceId, colorIndex);
+        }
+        l = `${COLOR_MAP[colorIndex]}${instanceId}\x1B[0m ${l}`;
+      }
+
+      this.logger.log(l);
     }
   }
 
@@ -277,6 +312,13 @@ export default class Logs {
           timestamp: cur.__time__,
           time: moment.unix(cur.__time__).format('YYYY-MM-DD H:mm:ss'),
           message: currentMessage.replace(new RegExp(/(\r)/g), tabReplaceStr),
+          extra: {
+            instanceID: cur.instanceID,
+            serviceName: cur.serviceName,
+            functionName: cur.functionName,
+            qualifier: cur.qualifier,
+            versionId: cur.versionId,
+          },
         };
       }, {}));
     } while (xLogCount !== count && xLogProgress !== 'Complete');

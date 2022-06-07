@@ -7,46 +7,49 @@ interface IGetLogs {
     topic: string;
     query: string;
 }
+interface IRealtime {
+    projectName: string;
+    logStoreName: string;
+    topic: string;
+    query: string;
+    search: string;
+    qualifier: string;
+    match: string;
+}
+interface IHistory extends IRealtime {
+    startTime: string;
+    endTime: string;
+    type: 'success' | 'fail' | 'failed';
+    requestId: string;
+    instanceId: string;
+}
+interface IProps extends IHistory {
+    regionId: string;
+    tail: boolean;
+}
 export default class Logs {
-    static getInputs(props: any, comParseData: any): Promise<{
-        regionId: any;
-        projectName: any;
-        logStoreName: any;
-        topic: any;
-        query: any;
-        tail: any;
-        startTime: any;
-        endTime: any;
-        keyword: any;
-        type: any;
-        requestId: any;
-    }>;
+    static getInputs(props: any, comParseData: any): Promise<IProps>;
     logger: import("@serverless-devs/core").Logger;
     slsClient: any;
     constructor(regionId: any, profile: ICredentials);
-    printLogs(historyLogs: any[]): void;
+    /**
+     * 输出日志
+     * @param historyLogs
+     * @param match
+     */
+    printLogs(historyLogs: any[], match: any): void;
     /**
      * 获取实时日志
-     * @param {*} projectName
-     * @param {*} logStoreName
-     * @param {*} topic
-     * @param {*} query
      */
-    realtime(projectName: string, logStoreName: string, topic: string, query: string, keyword: string): Promise<void>;
+    realtime({ projectName, logStoreName, topic, query, search, qualifier, match }: IRealtime): Promise<void>;
     /**
      * 获取历史日志
-     * @param {props} projectName
-     * @param {*} logStoreName
-     * @param {*} from
-     * @param {*} to
-     * @param {*} topic
-     * @param {*} query
-     * @param {*} keyword 关键字过滤
-     * @param {*} type
-     * @param {*} requestId 废弃
      */
-    history(props: any): Promise<any[]>;
-    getSlsQuery(query: string, keyword: string, requestId?: string): string;
+    history({ projectName, logStoreName, topic, query, search, type, requestId, instanceId, qualifier, startTime, endTime, }: IHistory): Promise<any[]>;
+    /**
+     * 生成查询语句
+     */
+    getSlsQuery(query: string, search: string, qualifier: string, requestId?: string, instanceId?: string): string;
     /**
      * 获取日志
      */

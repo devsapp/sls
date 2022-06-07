@@ -3,7 +3,7 @@ import { inquirer } from '@serverless-devs/core';
 import { SLS } from 'aliyun-sdk';
 import moment from 'moment';
 import _ from 'lodash';
-import { TIME_ERROR_TIP } from './constant';
+import { TIME_ERROR_TIP, DATE_TIME_REG } from './constant';
 import { ICredentials } from './interface';
 import logger from './common/logger';
 
@@ -16,14 +16,38 @@ interface IGetLogs {
   query: string;
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+interface IRealtime {
+  projectName: string;
+  logStoreName: string;
+  topic: string;
+  query: string;
+  search: string;
+  qualifier: string;
+  match: string;
 }
 
+interface IHistory extends IRealtime {
+  startTime: string;
+  endTime: string;
+  type: 'success' | 'fail' | 'failed';
+  requestId: string;
+  instanceId: string;
+}
+
+interface IProps extends IHistory {
+  regionId: string;
+  tail: boolean;
+}
+
+const replaceAll = (string, search, replace) => string.split(search).join(replace);
+const sleep = (ms: number) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+const COLOR_MAP = ['\x1B[36m', '\x1B[32m', '\x1B[33m', '\x1B[34m'];
+const instanceIds = new Map();
+
 export default class Logs {
-  static async getInputs(props, comParseData) {
+  static async getInputs(props, comParseData): Promise<IProps> {
     const regionId = comParseData?.region || props?.regionId;
     if (_.isNil(regionId)) {
       throw new Error('region does not exist');
@@ -61,9 +85,12 @@ export default class Logs {
       tail: comParseData?.tail,
       startTime: comParseData?.['start-time'],
       endTime: comParseData?.['end-time'],
-      keyword: comParseData?.search || comParseData?.keyword,
+      search: comParseData?.search || comParseData?.keyword,
       type: comParseData?.type,
+      qualifier: comParseData?.qualifier,
+      match: comParseData?.match,
       requestId: comParseData?.['request-id'],
+      instanceId: comParseData?.['instance-id'],
     };
   }
 
@@ -83,26 +110,70 @@ export default class Logs {
     });
   }
 
-  printLogs(historyLogs: any[]) {
+  /**
+   * 输出日志
+   * @param historyLogs
+   * @param match
+   */
+  printLogs(historyLogs: any[], match) {
     let requestId = '';
 
+    this.logger.debug(`print logs: ${JSON.stringify(historyLogs)}`);
     for (const item of historyLogs) {
-      if (requestId !== item.requestId) {
+      const { message: log, requestId: rid, time, extra } = item;
+      if (requestId !== rid) {
         this.logger.log('\n');
-        requestId = item.requestId;
+        requestId = rid;
       }
-      this.logger.log(item.message);
+
+      let l = log;
+
+      const tokens = l.split(' ');
+      if (tokens.length && DATE_TIME_REG.test(tokens[0])) {
+        tokens[0] = `\x1B[1;32m${moment(tokens[0]).format('YYYY-MM-DD HH:mm:ss')}\x1B[0m`;
+      }
+
+      if (tokens[2] === '[silly]') {
+        tokens.splice(2, 1);
+      }
+      l = tokens.join(' ');
+      // l = _.trim(tokens.join(' '), '\n');
+
+      l = replaceAll(l, 'Error', '\x1B[31mError\x1B[0m');
+      l = replaceAll(l, 'ERROR', '\x1B[31mERROR\x1B[0m');
+      l = replaceAll(l, 'error', '\x1B[31merror\x1B[0m');
+
+      if (time) {
+        l = `\x1B[2m${time}\x1B[0m ${l}`;
+      }
+      if (extra?.instanceID) {
+        const instanceId = extra.instanceID;
+        let colorIndex;
+        if (instanceIds.has(instanceId)) {
+          colorIndex = instanceIds.get(instanceId);
+        } else {
+          colorIndex = instanceIds.size % COLOR_MAP.length;
+          instanceIds.set(instanceId, colorIndex);
+        }
+        l = `${COLOR_MAP[colorIndex]}${instanceId}\x1B[0m ${l}`;
+      }
+
+      // if (extra?.qualifier) {
+      //   l = `${extra.qualifier} ${l}`;
+      // }
+
+      if (match) {
+        l = replaceAll(l, match, `\x1B[43m${match}\x1B[0m`);
+      }
+
+      this.logger.log(l);
     }
   }
 
   /**
    * 获取实时日志
-   * @param {*} projectName
-   * @param {*} logStoreName
-   * @param {*} topic
-   * @param {*} query
    */
-  async realtime(projectName: string, logStoreName: string, topic: string, query: string, keyword: string) {
+  async realtime({ projectName, logStoreName, topic, query, search, qualifier, match }: IRealtime) {
     let timeStart;
     let timeEnd;
     let times = 1800;
@@ -124,7 +195,7 @@ export default class Logs {
         projectName,
         logStoreName,
         topic,
-        query: this.getSlsQuery(query, keyword),
+        query: this.getSlsQuery(query, search, qualifier),
         from: timeStart,
         to: timeEnd,
       });
@@ -146,36 +217,28 @@ export default class Logs {
         return true;
       });
 
-      this.printLogs(notConsumedLogs);
+      this.printLogs(notConsumedLogs, match);
     }
   }
 
   /**
    * 获取历史日志
-   * @param {props} projectName
-   * @param {*} logStoreName
-   * @param {*} from
-   * @param {*} to
-   * @param {*} topic
-   * @param {*} query
-   * @param {*} keyword 关键字过滤
-   * @param {*} type
-   * @param {*} requestId 废弃
    */
-  async history(props) {
-    const {
-      projectName,
-      logStoreName,
-      topic,
-      query,
-      keyword,
-      type,
-      requestId,
-    } = props;
-
+  async history({
+    projectName,
+    logStoreName,
+    topic,
+    query,
+    search,
+    type,
+    requestId,
+    instanceId,
+    qualifier,
+    startTime,
+    endTime,
+  }: IHistory) {
     let from = moment().subtract(20, 'minutes').unix();
     let to = moment().unix();
-    let { startTime, endTime } = props;
     if (startTime && endTime) {
       // 支持时间戳和其他时间格式
       startTime = /^\d+$/g.test(startTime) ? startTime : startTime;
@@ -197,13 +260,16 @@ export default class Logs {
       projectName,
       logStoreName,
       topic,
-      query: this.getSlsQuery(query, keyword, requestId),
+      query: this.getSlsQuery(query, search, qualifier, requestId, instanceId),
     });
 
     return this.filterByKeywords(logsList, { type });
   }
 
-  getSlsQuery(query: string, keyword: string, requestId?: string) {
+  /**
+   * 生成查询语句
+   */
+  getSlsQuery(query: string, search: string, qualifier: string, requestId?: string, instanceId?: string): string {
     let q = '';
     let hasValue = false;
 
@@ -212,8 +278,18 @@ export default class Logs {
       hasValue = true;
     }
 
-    if (!_.isNil(keyword)) {
-      q = hasValue ? `${q} and ${keyword}` : keyword;
+    if (!_.isNil(search)) {
+      q = hasValue ? `${q} and ${search}` : search;
+      hasValue = true;
+    }
+
+    if (!_.isNil(qualifier)) {
+      q = hasValue ? `${q} and ${qualifier}` : qualifier;
+      hasValue = true;
+    }
+
+    if (!_.isNil(instanceId)) {
+      q = hasValue ? `${q} and ${instanceId}` : instanceId;
       hasValue = true;
     }
 
@@ -227,7 +303,7 @@ export default class Logs {
   /**
    * 获取日志
    */
-  async getLogs(requestParams: IGetLogs, tabReplaceStr = '') {
+  async getLogs(requestParams: IGetLogs, tabReplaceStr = '\n') {
     this.logger.debug(`get logs params: ${JSON.stringify(requestParams)}`);
     let count;
     let xLogCount;
@@ -264,6 +340,7 @@ export default class Logs {
           requestId = found[0];
         }
 
+        // TODO: custom 不一定存在 requestId
         if (currentMessage.includes('FC Invoke Start')) {
           requestId = currentMessage.replace('FC Invoke Start RequestId: ', '');
         }
@@ -276,7 +353,14 @@ export default class Logs {
           requestId,
           timestamp: cur.__time__,
           time: moment.unix(cur.__time__).format('YYYY-MM-DD H:mm:ss'),
-          message: currentMessage.replace(new RegExp(/(\r)/g), tabReplaceStr),
+          message: _.trim(currentMessage, '\n').replace(new RegExp(/(\r)/g), tabReplaceStr),
+          extra: {
+            instanceID: cur.instanceID,
+            serviceName: cur.serviceName,
+            functionName: cur.functionName,
+            qualifier: cur.qualifier,
+            versionId: cur.versionId,
+          },
         };
       }, {}));
     } while (xLogCount !== count && xLogProgress !== 'Complete');

@@ -97,12 +97,24 @@ export default class SlsCompoent extends Base {
 
   async logs(inputs: IInputs) {
     this.logger.debug(`inputs params: ${JSON.stringify(inputs.props)}, args: ${inputs.args}`);
+    /**
+     * region | query(functionName) | topic(serviceName) | project | logstore: 这五个参数在 fc 组件不需要指定
+     * tail: 实时日志
+     * start-time | end-time: 查询的时间区间，默认 20min
+     *
+     * search: 关键字查询（之前是 keyword，后修改为 search）
+     * type: success | fail
+     * request-id: 根据 request-id 过滤
+     * instance-id: 根据 instance-id 过滤
+     * qualifier: 查询指定版本或者别名
+     * match: 匹配到的字符高亮
+     */
     const apts = {
       boolean: ['tail', 'help'],
-      string: ['request-id', 'keyword', 'search', 'topic', 'query', 'region', 'project', 'logstore'],
-      alias: { tail: 't', 'start-time': 's', 'end-time': 'e', keyword: 'k', 'request-id': 'r', help: 'h' },
+      string: ['request-id', 'search', 'instance-id', 'match', 'qualifier', 'region', 'query', 'topic', 'project', 'logstore'],
+      alias: { tail: 't', 'start-time': 's', 'end-time': 'e', 'request-id': 'r', help: 'h' },
     };
-    const comParse = await commandParse({ args: inputs.args }, apts);
+    const comParse = await commandParse(inputs, apts);
     this.logger.debug(`commandParse response is: ${JSON.stringify(comParse)}`);
 
     // @ts-ignore
@@ -114,15 +126,16 @@ export default class SlsCompoent extends Base {
     const credentials = await this.getCredential(inputs.credentials, inputs.project?.access);
     reportComponent('sls', { uid: credentials.AccountID, command: 'logs' });
 
+    // 参数转化处理，尤其是交互兼容处理
     const props = await Logs.getInputs(inputs.props || {}, comParse.data || {});
     this.logger.debug(`handler props is: ${JSON.stringify(props)}`);
 
     const logsClient = new Logs(props.regionId, credentials);
     if (props.tail) {
-      await logsClient.realtime(props.projectName, props.logStoreName, props.topic, props.query, props.keyword);
+      await logsClient.realtime(props);
     } else {
       const historyLogs = await logsClient.history(props);
-      logsClient.printLogs(historyLogs);
+      logsClient.printLogs(historyLogs, props.match);
     }
   }
 
